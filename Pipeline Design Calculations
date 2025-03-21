@@ -1,0 +1,216 @@
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <iomanip>
+
+using namespace std;
+
+// Define M_PI (if <numbers> is not available)
+#ifndef M_PI
+#define M_PI 3.14159265358979323846 
+#endif
+
+// Structure for pipe data (same as before)
+struct PipeData {
+    float nominalDiameter;
+    float pricePerMeter;
+    float internalDiameter;
+};
+
+// Structure for crude oil data (simplified for Group 4)
+struct CrudeOilData {
+    float flowRate;    // m^3/h
+    float pipeLength;  // m
+    float apiGravity;
+    float susViscosity;
+};
+
+// Structure for storing calculation results for each pipe (simplified)
+struct PipeResult {
+    float nominalDiameter;
+    float velocity;
+    float reynoldsNumber;
+    float frictionFactor;
+    float headLoss;
+    float pumpHead;
+    float pumpPower;
+    float pipeCost;
+    float installationCost;
+    float pumpCost;
+    float yearlyElectricityCost;
+    float totalCost;
+};
+
+// Function Implementations
+float calculateDensity(float apiGravity) {
+    float specificGravity = 141.5 / (apiGravity + 131.5);
+    return specificGravity * 1000.0;
+}
+
+float calculateDynamicViscosity(float susViscosity, float density) {
+    float centistokes = (susViscosity - 190.0) * 0.220;
+    return centistokes * density / 1000.0;
+}
+
+float calculateFlowVelocity(float flowRate, float internalDiameter) {
+    float flowRate_s = flowRate / 3600.0;
+    return flowRate_s / (M_PI * pow(internalDiameter / 2.0, 2)); // Use M_PI
+}
+
+float calculateReynoldsNumber(float density, float velocity, float internalDiameter, float dynamicViscosity) {
+    return (density * velocity * internalDiameter) / dynamicViscosity;
+}
+
+float calculateFrictionFactor(float reynoldsNumber) {
+    if (reynoldsNumber < 2000.0) { // Laminar flow
+        return 64.0 / reynoldsNumber;
+    }
+    else {
+        // Turbulent flow:  Using the Colebrook-White equation (iterative solution is more accurate)
+        // This is a simplified approximation for turbulent flow
+        return 0.25 / pow(log10(5.74 / pow(reynoldsNumber, 0.9)), 2);
+    }
+}
+
+float calculateHeadLoss(float frictionFactor, float pipeLength, float internalDiameter, float velocity) {
+    return frictionFactor * (pipeLength / internalDiameter) * (pow(velocity, 2) / (2.0 * 9.81));
+}
+
+float calculateFittingLoss(float velocity) {
+    // Example K-values (approximate - you should find more accurate values)
+    float totalK = (3.0 * 0.5) + (2.0 * 5.6) + (2.0 * 10.0) + (10.0 * 0.9) + (5.0 * 2.0) + (3.0 * 0.6) + (2.0 * 1.5);
+    return totalK * (pow(velocity, 2) / (2.0 * 9.81));
+}
+
+float calculatePumpHead(float headLoss) {
+    return headLoss + 20.0; // Adding the elevation difference
+}
+
+float calculatePumpPower(float density, float flowRate, float pumpHead, float pumpEfficiency) {
+    float flowRate_s = flowRate / 3600.0;
+    return (density * 9.81 * flowRate_s * pumpHead) / pumpEfficiency;
+}
+
+float calculatePipeCost(float pipeLength, float pricePerMeter) {
+    return pipeLength * pricePerMeter;
+}
+
+float calculateInstallationCost(float pipeCost) {
+    return 0.25 * pipeCost;
+}
+
+float calculatePumpCost(float pumpPower) {
+    // Example cost function - replace with actual pump cost data
+    return 5000.0 + 100.0 * (pumpPower / 1000.0);
+}
+
+float calculateYearlyElectricityCost(float pumpPower, float electricityRate, float operatingHours) {
+    return (pumpPower / 1000.0) * electricityRate * operatingHours;
+}
+
+float calculateTotalCost(float pipeCost, float installationCost, float pumpCost, float yearlyElectricityCost, int serviceLife) {
+    return (pipeCost + installationCost) + pumpCost + (yearlyElectricityCost * serviceLife);
+}
+
+// Data Initialization (simplified for Group 4)
+void initializePipeData(vector<PipeData>& pipeData) {
+    pipeData.push_back({ 0.5, 1.5, 0.0209 });
+    pipeData.push_back({ 0.75, 1.9, 0.0267 });
+    pipeData.push_back({ 1.0, 2.7, 0.03505 });
+    pipeData.push_back({ 1.25, 3.5, 0.04089 });
+    pipeData.push_back({ 1.5, 4.0, 0.04603 });
+    pipeData.push_back({ 2.0, 5.6, 0.0525 });
+    pipeData.push_back({ 2.5, 7.3, 0.06271 });
+    pipeData.push_back({ 3.0, 9.5, 0.07793 });
+    pipeData.push_back({ 4.0, 14.0, 0.1023 });
+    pipeData.push_back({ 5.0, 20.1, 0.1273 });
+    pipeData.push_back({ 6.0, 23.3, 0.1524 });
+    pipeData.push_back({ 8.0, 34.0, 0.2027 });
+    pipeData.push_back({ 10.0, 46.9, 0.2545 });
+    pipeData.push_back({ 12.0, 60.2, 0.3048 });
+}
+
+void initializeCrudeOilData(CrudeOilData& crudeOilData) {
+    // Initialize for Group 4 only
+    crudeOilData.flowRate = 20.0;
+    crudeOilData.pipeLength = 400.0;
+    crudeOilData.apiGravity = 30.0;
+    crudeOilData.susViscosity = 240.0;
+}
+
+int main() {
+    vector<PipeData> pipeData;
+    CrudeOilData crudeOilData; // Single CrudeOilData object
+
+    initializePipeData(pipeData);
+    initializeCrudeOilData(crudeOilData);
+
+    float pumpEfficiency = 0.75;
+    float electricityRate = 0.075;
+    float operatingHours = 350.0 * 24.0;
+    int serviceLife = 10;
+
+    vector<PipeResult> results;
+
+    // Iterate through each pipe diameter (no need for oil group loop)
+    for (const auto& pipe : pipeData) {
+        PipeResult result;
+        result.nominalDiameter = pipe.nominalDiameter;
+
+        float density = calculateDensity(crudeOilData.apiGravity);
+        float dynamicViscosity = calculateDynamicViscosity(crudeOilData.susViscosity, density);
+        float velocity = calculateFlowVelocity(crudeOilData.flowRate, pipe.internalDiameter);
+        float reynoldsNumber = calculateReynoldsNumber(density, velocity, pipe.internalDiameter, dynamicViscosity);
+        float frictionFactor = calculateFrictionFactor(reynoldsNumber);
+        float headLoss = calculateHeadLoss(frictionFactor, crudeOilData.pipeLength, pipe.internalDiameter, velocity);
+        float fittingLoss = calculateFittingLoss(velocity);
+        float pumpHead = calculatePumpHead(headLoss + fittingLoss);
+        float pumpPower = calculatePumpPower(density, crudeOilData.flowRate, pumpHead, pumpEfficiency);
+        float pipeCost = calculatePipeCost(crudeOilData.pipeLength, pipe.pricePerMeter);
+        float installationCost = calculateInstallationCost(pipeCost);
+        float pumpCost = calculatePumpCost(pumpPower);
+        float yearlyElectricityCost = calculateYearlyElectricityCost(pumpPower, electricityRate, operatingHours);
+        float totalCost = calculateTotalCost(pipeCost, installationCost, pumpCost, yearlyElectricityCost, serviceLife);
+
+        result.velocity = velocity;
+        result.reynoldsNumber = reynoldsNumber;
+        result.frictionFactor = frictionFactor;
+        result.headLoss = headLoss + fittingLoss;
+        result.pumpHead = pumpHead;
+        result.pumpPower = pumpPower;
+        result.pipeCost = pipeCost;
+        result.installationCost = installationCost;
+        result.pumpCost = pumpCost;
+        result.yearlyElectricityCost = yearlyElectricityCost;
+        result.totalCost = totalCost;
+
+        results.push_back(result);
+    }
+
+    // Find the optimum pipe diameter (simplified)
+    cout << fixed << setprecision(2);
+
+    float minCost = numeric_limits<float>::max();
+    float optimumDiameter = 0.0;
+
+    for (const auto& result : results) {
+        if (result.totalCost < minCost) {
+            minCost = result.totalCost;
+            optimumDiameter = result.nominalDiameter;
+        }
+    }
+
+    cout << "Optimum Pipe Diameter for Group 4: " << optimumDiameter << " inches" << endl;
+    cout << "Minimum Total Cost for Group 4: $" << minCost << endl;
+
+    cout << "\nDetailed Results for Group 4:\n";
+    cout << "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
+    cout << setw(10) << "Diameter" << setw(10) << "Velocity" << setw(15) << "Reynolds No" << setw(15) << "Friction" << setw(15) << "Head Loss" << setw(10) << "Pump Head" << setw(10) << "Pump Power" << setw(10) << "Pipe Cost" << setw(15) << "Install Cost" << setw(10) << "Pump Cost" << setw(15) << "Electr. Cost" << setw(15) << "Total Cost" << "\n";
+    cout << "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
+
+    for (const auto& result : results) {
+        cout << setw(10) << result.nominalDiameter << setw(10) << result.velocity << setw(15) << result.reynoldsNumber << setw(15) << result.frictionFactor << setw(15) << result.headLoss << setw(10) << result.pumpHead << setw(10) << result.pumpPower << setw(10) << result.pipeCost << setw(15) << result.installationCost << setw(10) << result.pumpCost << setw(15) << result.yearlyElectricityCost << setw(15) << result.totalCost << "\n";
+    }
+
+    return 0;
+}

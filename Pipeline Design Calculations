@@ -10,14 +10,14 @@ using namespace std;
 #define M_PI 3.14159265358979323846 
 #endif
 
-// Structure for pipe data (same as before)
+// Structure for pipe data 
 struct PipeData {
     float nominalDiameter;
     float pricePerMeter;
     float internalDiameter;
 };
 
-// Structure for crude oil data (simplified for Group 4)
+// Structure for crude oil data (simplified for Group 4 only)
 struct CrudeOilData {
     float flowRate;    // m^3/h
     float pipeLength;  // m
@@ -25,7 +25,7 @@ struct CrudeOilData {
     float susViscosity;
 };
 
-// Structure for storing calculation results for each pipe (simplified)
+// Structure for storing calculation results for each pipe (simplified for group 4 only)
 struct PipeResult {
     float nominalDiameter;
     float velocity;
@@ -77,7 +77,7 @@ float calculateHeadLoss(float frictionFactor, float pipeLength, float internalDi
 }
 
 float calculateFittingLoss(float velocity) {
-    // Example K-values (approximate - you should find more accurate values)
+    // Example K-values (approximate)
     float totalK = (3.0 * 0.5) + (2.0 * 5.6) + (2.0 * 10.0) + (10.0 * 0.9) + (5.0 * 2.0) + (3.0 * 0.6) + (2.0 * 1.5);
     return totalK * (pow(velocity, 2) / (2.0 * 9.81));
 }
@@ -100,7 +100,7 @@ float calculateInstallationCost(float pipeCost) {
 }
 
 float calculatePumpCost(float pumpPower) {
-    // Example cost function - replace with actual pump cost data
+    // cost function - replace with actual pump cost data soooooooooooooon
     return 5000.0 + 100.0 * (pumpPower / 1000.0);
 }
 
